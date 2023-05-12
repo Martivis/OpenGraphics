@@ -11,17 +11,22 @@ public class Game : GameWindow
 {
     private int _vbo;
     private int _vao;
+    private int _ebo;
 
     Shader _shader;
 
-    private float[] _vertices =
+    private readonly float[] _vertices =
     {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f, -0.9f, 0.0f
+        -0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.3f,
+         0.5f, -0.5f, 0.0f,  0.5f, 0.0f, 0.5f,
+         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 0.5f,
+         0.0f, -0.9f, 0.0f,  0.0f, 0.0f, 1.0f
+    };
+
+    private readonly uint[] _indices =
+    {
+        0, 1, 2,
+        0, 1, 3
     };
 
     public Game(int width, int height, string title) 
@@ -64,7 +69,7 @@ public class Game : GameWindow
 
         CreateVBO();
         CreateVAO();
-
+        CreateEBO();
     }
 
     private void SetBackgroundColor(float red, float green, float blue, float alpha)
@@ -84,20 +89,35 @@ public class Game : GameWindow
         _vao = GL.GenVertexArray();
         GL.BindVertexArray(_vao);
 
-        var attribLocation = _shader.GetAttribLocation("aPosition");
-
         GL.VertexAttribPointer(
             index: 0, 
-            size: 3, 
+            size: 3, // This is about dimensions
             type: VertexAttribPointerType.Float, 
             normalized: false, 
-            stride: 3 * sizeof(float), 
-            offset: attribLocation);
+            stride: 6 * sizeof(float), 
+            offset: 0);
 
-        GL.EnableVertexAttribArray(attribLocation);
+        GL.VertexAttribPointer(
+            index: 1,
+            size: 3, // This is about dimensions
+            type: VertexAttribPointerType.Float,
+            normalized: false,
+            stride: 6 * sizeof(float),
+            offset: 3 * sizeof(float));
+
+        var aPositionLocation = _shader.GetAttribLocation("aPosition");
+        var colorLocation = _shader.GetAttribLocation("aColor");
+
+        GL.EnableVertexAttribArray(aPositionLocation);
+        GL.EnableVertexAttribArray(colorLocation);
     }
 
-    
+    private void CreateEBO()
+    {
+        _ebo = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
+    }
 
     protected override void OnRenderFrame(FrameEventArgs e)
     {
@@ -115,10 +135,12 @@ public class Game : GameWindow
     private void DrawObject()
     {
         GL.BindVertexArray(_vao);
-        GL.DrawArrays(
+        GL.DrawElements(
             mode: PrimitiveType.Triangles,
-            first: 0,
-            count: _vertices.Length / 3);
+            count: _indices.Length,
+            type: DrawElementsType.UnsignedInt,
+            indices: 0
+            );
     }
 
     protected override void OnResize(ResizeEventArgs e)
