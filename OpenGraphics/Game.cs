@@ -18,8 +18,10 @@ public class Game : GameWindow
     {
         -0.5f, -0.5f, 0.0f,
          0.5f, -0.5f, 0.0f,
-         0.5f,  0.5f, 0.0f,
-         1.0f, 1.0f, 0.0f
+         0.0f,  0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f, -0.9f, 0.0f
     };
 
     public Game(int width, int height, string title) 
@@ -58,6 +60,8 @@ public class Game : GameWindow
         SetBackgroundColor(0, 0, 0, 1);
 
         _shader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
+        _shader.Use();
+
         CreateVBO();
         CreateVAO();
 
@@ -100,6 +104,8 @@ public class Game : GameWindow
         base.OnRenderFrame(e);
 
         GL.Clear(ClearBufferMask.ColorBufferBit);
+
+        _shader.Use();
 
         DrawObject();
 
