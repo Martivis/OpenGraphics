@@ -16,6 +16,8 @@ public class Game : GameWindow
 
     Texture _texture;
 
+    Stopwatch _stopwatch;
+
     private readonly float[] _vertices =
     {
         -0.5f, -0.0f, 0.0f,   1.0f,  1.0f,
@@ -68,11 +70,15 @@ public class Game : GameWindow
         _shader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
         _shader.Use();
 
+        _texture = Texture.LoadFromFile("Resources/Ваня.jpg");
+        _texture.Use(TextureUnit.Texture0);
+
         CreateVBO();
         CreateVAO();
         CreateEBO();
 
-        
+        _stopwatch = new Stopwatch();
+        _stopwatch.Start();
     }
 
     private void SetBackgroundColor(float red, float green, float blue, float alpha)
@@ -111,9 +117,6 @@ public class Game : GameWindow
             normalized: false,
             stride: 5 * sizeof(float),
             offset: 3 * sizeof(float));
-
-        _texture = Texture.LoadFromFile("Resources/Ваня.jpg");
-        _texture.Use(TextureUnit.Texture0);
     }
 
     private void CreateEBO()
@@ -129,18 +132,33 @@ public class Game : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit);
 
-        
+        ApplyTransformations();
 
         DrawObject();
 
         SwapBuffers();
     }
 
+    private void ApplyTransformations()
+    {
+        var transform = Matrix4.Identity;
+
+        var step = _stopwatch.Elapsed.TotalSeconds;
+
+        transform = transform * Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 15));
+        transform = transform * Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
+
+
+        _shader.SetMatrix4("transform", transform);
+    }
+
     private void DrawObject()
     {
         GL.BindVertexArray(_vao);
+
         _texture.Use(TextureUnit.Texture0);
         _shader.Use();
+
         GL.DrawElements(
             mode: PrimitiveType.Triangles,
             count: _indices.Length,
