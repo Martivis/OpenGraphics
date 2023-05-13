@@ -1,9 +1,8 @@
-﻿
-using OpenGraphics.Shaders;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using System.Diagnostics;
 
 namespace OpenGraphics;
 
@@ -15,12 +14,14 @@ public class Game : GameWindow
 
     Shader _shader;
 
+    Texture _texture;
+
     private readonly float[] _vertices =
     {
-        -0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.3f,
-         0.5f, -0.5f, 0.0f,  0.5f, 0.0f, 0.5f,
-         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 0.5f,
-         0.0f, -0.9f, 0.0f,  0.0f, 0.0f, 1.0f
+        -0.5f, -0.0f, 0.0f,   1.0f,  1.0f,
+         0.5f,  0.0f, 0.0f,   0.0f,  0.0f,
+         0.0f,  0.5f, 0.0f,   1.0f,  0.0f,
+         0.0f, -0.5f, 0.0f,   0.0f,  1.0f,
     };
 
     private readonly uint[] _indices =
@@ -70,6 +71,8 @@ public class Game : GameWindow
         CreateVBO();
         CreateVAO();
         CreateEBO();
+
+        
     }
 
     private void SetBackgroundColor(float red, float green, float blue, float alpha)
@@ -89,27 +92,28 @@ public class Game : GameWindow
         _vao = GL.GenVertexArray();
         GL.BindVertexArray(_vao);
 
+        var aPositionLocation = _shader.GetAttribLocation("aPosition");
+        GL.EnableVertexAttribArray(aPositionLocation);
         GL.VertexAttribPointer(
-            index: 0, 
+            index: aPositionLocation, 
             size: 3, // This is about dimensions
             type: VertexAttribPointerType.Float, 
             normalized: false, 
-            stride: 6 * sizeof(float), 
+            stride: 5 * sizeof(float), 
             offset: 0);
 
+        var textureLocation = _shader.GetAttribLocation("aTexCoord");
+        GL.EnableVertexAttribArray(textureLocation);
         GL.VertexAttribPointer(
-            index: 1,
-            size: 3, // This is about dimensions
+            index: textureLocation,
+            size: 2, // This is about dimensions
             type: VertexAttribPointerType.Float,
             normalized: false,
-            stride: 6 * sizeof(float),
+            stride: 5 * sizeof(float),
             offset: 3 * sizeof(float));
 
-        var aPositionLocation = _shader.GetAttribLocation("aPosition");
-        var colorLocation = _shader.GetAttribLocation("aColor");
-
-        GL.EnableVertexAttribArray(aPositionLocation);
-        GL.EnableVertexAttribArray(colorLocation);
+        _texture = Texture.LoadFromFile("Resources/Ваня.jpg");
+        _texture.Use(TextureUnit.Texture0);
     }
 
     private void CreateEBO()
@@ -125,7 +129,7 @@ public class Game : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit);
 
-        _shader.Use();
+        
 
         DrawObject();
 
@@ -135,6 +139,8 @@ public class Game : GameWindow
     private void DrawObject()
     {
         GL.BindVertexArray(_vao);
+        _texture.Use(TextureUnit.Texture0);
+        _shader.Use();
         GL.DrawElements(
             mode: PrimitiveType.Triangles,
             count: _indices.Length,
