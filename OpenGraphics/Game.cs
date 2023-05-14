@@ -9,12 +9,10 @@ namespace OpenGraphics;
 
 public class Game : GameWindow
 {
-    private int _vbo;
-    private int _vao;
-    private int _ebo;
+    private IEnumerable<GameObject> _objects;
 
     Shader _shader;
-    Texture _texture;
+
 
     Camera _camera;
 
@@ -27,38 +25,54 @@ public class Game : GameWindow
     const float cameraSpeed = 1.5f;
     const float sensitivity = 0.2f;
 
-    private readonly float[] _vertices =
+    private readonly float[] _vertices1 =
     {
         -0.5f, -0.0f, 0.0f, 1.0f, 1.0f,
          0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
          0.0f,  0.5f, 0.0f, 1.0f, 0.0f,
          0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
-        
+
         -0.5f, -0.0f, -0.2f, 1.0f, 0.0f,
          0.5f,  0.0f, -0.2f, 0.0f, 1.0f,
          0.0f,  0.5f, -0.2f, 1.0f, 1.0f,
          0.0f, -0.5f, -0.2f, 0.0f, 0.0f,
     };
 
-    private readonly uint[] _indices =
+    private readonly uint[] _indices1 =
     {
         0, 1, 2,
         0, 1, 3,
-        
+
         0, 6, 4,
         0, 6, 2,
-        
+
         0, 7, 3,
         0, 7, 4,
-        
+
         5, 3, 7,
         5, 3, 1,
-        
+
         5, 2, 1,
         5, 2, 6,
-        
+
         5, 4, 7,
         5, 4, 6,
+    };
+
+    private readonly float[] _vertices2 =
+    {
+        -0.4f,  0.0f, 0.1f, 1.0f, 1.0f,
+         0.4f,  0.0f, 0.1f, 1.0f, 0.0f,
+         0.0f,  0.6f, 0.1f, 0.0f, 1.0f,
+         0.0f,  0.0f, -0.6f, 0.0f, 0.0f,
+    };
+
+    private readonly uint[] _indices2 =
+    {
+        0, 1, 2,
+        0, 1, 3,
+        0, 2, 3,
+        1, 2, 3,
     };
 
     public Game(int width, int height, string title) 
@@ -78,12 +92,11 @@ public class Game : GameWindow
         _shader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
         _shader.Use();
 
-        _texture = Texture.LoadFromFile("Resources/Ваня.jpg");
-        _texture.Use(TextureUnit.Texture0);
-
-        CreateVBO();
-        CreateVAO();
-        CreateEBO();
+        _objects = new List<GameObject>()
+        {
+            new GameObject(_shader, _vertices1, _indices1),
+            new GameObject(_shader, _vertices2, _indices2)
+        };
 
         GL.Enable(EnableCap.DepthTest);
 
@@ -98,45 +111,7 @@ public class Game : GameWindow
         GL.ClearColor(red, green, blue, alpha);
     }
 
-    private void CreateVBO()
-    {
-        _vbo = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
-        GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
-    }
-
-    private void CreateVAO()
-    {
-        _vao = GL.GenVertexArray();
-        GL.BindVertexArray(_vao);
-
-        var aPositionLocation = _shader.GetAttribLocation("aPosition");
-        GL.EnableVertexAttribArray(aPositionLocation);
-        GL.VertexAttribPointer(
-            index: aPositionLocation, 
-            size: 3, // This is about dimensions
-            type: VertexAttribPointerType.Float, 
-            normalized: false, 
-            stride: 5 * sizeof(float), 
-            offset: 0);
-
-        var textureLocation = _shader.GetAttribLocation("aTexCoord");
-        GL.EnableVertexAttribArray(textureLocation);
-        GL.VertexAttribPointer(
-            index: textureLocation,
-            size: 2, // This is about dimensions
-            type: VertexAttribPointerType.Float,
-            normalized: false,
-            stride: 5 * sizeof(float),
-            offset: 3 * sizeof(float));
-    }
-
-    private void CreateEBO()
-    {
-        _ebo = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
-    }
+    
 
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
@@ -232,7 +207,10 @@ public class Game : GameWindow
 
         ApplyTransformations();
 
-        DrawObject();
+        foreach (var obj in _objects)
+        {
+            obj.Draw();
+        }
 
         SwapBuffers();
     }
@@ -252,20 +230,7 @@ public class Game : GameWindow
         _shader.SetMatrix4("projection", _camera.GetProjectionMatrix());
     }
 
-    private void DrawObject()
-    {
-        GL.BindVertexArray(_vao);
 
-        _texture.Use(TextureUnit.Texture0);
-        _shader.Use();
-
-        GL.DrawElements(
-            mode: PrimitiveType.Triangles,
-            count: _indices.Length,
-            type: DrawElementsType.UnsignedInt,
-            indices: 0
-            );
-    }
 
     protected override void OnResize(ResizeEventArgs e)
     {
