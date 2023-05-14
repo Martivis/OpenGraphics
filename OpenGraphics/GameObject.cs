@@ -1,65 +1,36 @@
 ﻿
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace OpenGraphics;
 
-public class GameObject
+public class GameObject : IDisposable
 {
     private int _vbo;
     private int _vao;
     private int _ebo;
 
     private Texture _texture;
-    private readonly Shader _shader;
+    private Shader _shader;
 
-    private readonly float[] _vertices =
-    {
-        -0.5f, -0.0f, 0.0f, 1.0f, 1.0f,
-         0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
-         0.0f,  0.5f, 0.0f, 1.0f, 0.0f,
-         0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+    private readonly float[] _vertices;
 
-        -0.5f, -0.0f, -0.2f, 1.0f, 0.0f,
-         0.5f,  0.0f, -0.2f, 0.0f, 1.0f,
-         0.0f,  0.5f, -0.2f, 1.0f, 1.0f,
-         0.0f, -0.5f, -0.2f, 0.0f, 0.0f,
-    };
+    private readonly uint[] _indices;
 
-    private readonly uint[] _indices =
-    {
-        0, 1, 2,
-        0, 1, 3,
-
-        0, 6, 4,
-        0, 6, 2,
-
-        0, 7, 3,
-        0, 7, 4,
-
-        5, 3, 7,
-        5, 3, 1,
-
-        5, 2, 1,
-        5, 2, 6,
-
-        5, 4, 7,
-        5, 4, 6,
-    };
-
-    public GameObject(Shader shader, float[] vertices, uint[] indices)
+    public GameObject(Shader shader, Texture texture, float[] vertices, uint[] indices)
     {
         _vertices = vertices;
         _indices = indices;
         _shader = shader;
+        _texture = texture;
 
-        _texture = Texture.LoadFromFile("Resources/Ваня.jpg");
         _texture.Use(TextureUnit.Texture0);
+        _shader.Use();
 
 
         CreateVBO();
         CreateVAO();
         CreateEBO();
-
     }
 
     private void CreateVBO()
@@ -115,5 +86,25 @@ public class GameObject
             type: DrawElementsType.UnsignedInt,
             indices: 0
             );
+    }
+
+    public void Transform(Matrix4 matrix)
+    {
+        _shader.SetMatrix4("transform", Matrix4.Identity * matrix);
+    }
+
+    public void SetViewMatrix(Matrix4 matrix)
+    {
+        _shader.SetMatrix4("view", matrix);
+    }
+
+    public void SetProjectionMatrix(Matrix4 matrix)
+    {
+        _shader.SetMatrix4("projection", matrix);
+    }
+
+    public void Dispose()
+    {
+        _shader.Dispose();
     }
 }

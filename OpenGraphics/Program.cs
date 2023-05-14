@@ -1,4 +1,4 @@
 ﻿using OpenGraphics;
 
-using var game = new Game(width: 800, height: 600, title: "OpenGraphics");
+using var game = new Game(width: 800, height: 800, title: "OpenGraphics");
 game.Run();
