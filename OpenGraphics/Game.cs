@@ -100,7 +100,7 @@ public class Game : GameWindow
 
         GL.Enable(EnableCap.DepthTest);
 
-        _camera = new Camera(Vector3.UnitZ * 0.8f, _aspectRatio);
+        _camera = new Camera(Vector3.UnitZ * 2.0f, _aspectRatio);
 
         _stopwatch = new Stopwatch();
         _stopwatch.Start();
