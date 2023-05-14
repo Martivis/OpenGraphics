@@ -13,23 +13,45 @@ public class Game : GameWindow
     private int _ebo;
 
     Shader _shader;
-
     Texture _texture;
+
+    private Matrix4 _view;
+    private Matrix4 _projection;
 
     Stopwatch _stopwatch;
 
     private readonly float[] _vertices =
     {
-        -0.5f, -0.0f, 0.0f,   1.0f,  1.0f,
-         0.5f,  0.0f, 0.0f,   0.0f,  0.0f,
-         0.0f,  0.5f, 0.0f,   1.0f,  0.0f,
-         0.0f, -0.5f, 0.0f,   0.0f,  1.0f,
+        -0.5f, -0.0f, 0.0f, 1.0f, 1.0f,
+         0.5f,  0.0f, 0.0f, 0.0f, 0.0f,
+         0.0f,  0.5f, 0.0f, 1.0f, 0.0f,
+         0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        
+        -0.5f, -0.0f, -0.2f, 0.0f, 0.0f,
+         0.5f,  0.0f, -0.2f, 1.0f, 1.0f,
+         0.0f,  0.5f, -0.2f, 0.0f, 1.0f,
+         0.0f, -0.5f, -0.2f, 1.0f, 0.0f,
     };
 
     private readonly uint[] _indices =
     {
         0, 1, 2,
-        0, 1, 3
+        0, 1, 3,
+        
+        0, 6, 4,
+        0, 6, 2,
+        
+        0, 7, 3,
+        0, 7, 4,
+        
+        5, 3, 7,
+        5, 3, 1,
+        
+        5, 2, 1,
+        5, 2, 6,
+        
+        5, 4, 7,
+        5, 4, 6,
     };
 
     public Game(int width, int height, string title) 
@@ -76,6 +98,11 @@ public class Game : GameWindow
         CreateVBO();
         CreateVAO();
         CreateEBO();
+
+        GL.Enable(EnableCap.DepthTest);
+
+        _view = Matrix4.CreateTranslation(0.0f, 0.0f, -0.8f);
+        _projection = Matrix4.CreatePerspectiveFieldOfView(fovy: MathHelper.DegreesToRadians(90f), Size.X / (float)Size.Y, 0.1f, 100f);
 
         _stopwatch = new Stopwatch();
         _stopwatch.Start();
@@ -130,7 +157,7 @@ public class Game : GameWindow
     {
         base.OnRenderFrame(e);
 
-        GL.Clear(ClearBufferMask.ColorBufferBit);
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         ApplyTransformations();
 
@@ -150,6 +177,8 @@ public class Game : GameWindow
 
 
         _shader.SetMatrix4("transform", transform);
+        _shader.SetMatrix4("view", _view);
+        _shader.SetMatrix4("projection", _projection);
     }
 
     private void DrawObject()
