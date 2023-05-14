@@ -61,28 +61,12 @@ public class Game : GameWindow
     };
 
     uint[] _indices1 = {
-        0, 1, 2, 0, 2, 3,    // Front face
-        4, 5, 6, 4, 6, 7,    // Back face
-        8, 9, 10, 8, 10, 11, // Top face
+        0, 1, 2, 0, 2, 3,       // Front face
+        4, 5, 6, 4, 6, 7,       // Back face
+        8, 9, 10, 8, 10, 11,    // Top face
         12, 13, 14, 12, 14, 15, // Bottom face
         16, 17, 18, 16, 18, 19, // Right face
         20, 21, 22, 20, 22, 23  // Left face
-    };
-
-    private readonly float[] _vertices2 =
-    {
-        -0.4f,  0.0f, 0.1f, 1.0f, 1.0f,
-         0.4f,  0.0f, 0.1f, 1.0f, 0.0f,
-         0.0f,  0.6f, 0.1f, 0.0f, 1.0f,
-         0.0f,  0.0f, -0.6f, 0.0f, 0.0f,
-    };
-
-    private readonly uint[] _indices2 =
-    {
-        0, 1, 2,
-        0, 1, 3,
-        0, 2, 3,
-        1, 2, 3,
     };
 
     public Game(int width, int height, string title)
@@ -99,15 +83,16 @@ public class Game : GameWindow
 
         SetBackgroundColor(0, 0, 0, 1);
 
-        var cubeShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
-        var tetraederShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
+        var objectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
+        var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
 
         var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
+        var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
 
         _objects = new List<GameObject>()
         {
-            new GameObject(cubeShader, cobblestoneTexture, _vertices1, _indices1),
-            new GameObject(tetraederShader, cobblestoneTexture, _vertices2, _indices2)
+            new GameObject(objectShader, cobblestoneTexture, _vertices1, _indices1),
+            new GameObject(lightShader, glowstoneTexture, _vertices1, _indices1)
         };
 
         GL.Enable(EnableCap.DepthTest);
@@ -237,8 +222,8 @@ public class Game : GameWindow
         _objects[0].Transform(cubeTransform);
 
         var tetraederTransform = Matrix4.Identity;
-        tetraederTransform *= Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(step * 10));
-        tetraederTransform *= Matrix4.CreateTranslation(1, 0, 0);
+        tetraederTransform *= Matrix4.CreateTranslation(2, 0, 0);
+        tetraederTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
         _objects[1].Transform(tetraederTransform);
 
         foreach (var obj in _objects)
@@ -254,7 +239,7 @@ public class Game : GameWindow
     {
         base.OnResize(e);
         GL.Viewport(0, 0, e.Width, e.Height);
-        _aspectRatio = e.Width / e.Height;
+        _aspectRatio = e.Width / (float)e.Height;
         _camera.AspectRatio = _aspectRatio;
     }
 
