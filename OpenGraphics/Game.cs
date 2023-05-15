@@ -72,6 +72,8 @@ public class Game : GameWindow
         20, 21, 22, 20, 22, 23  // Left face
     };
 
+    Vector3 _lightPos = new Vector3(0, 0, 0);
+
     public Game(int width, int height, string title)
         : base(GameWindowSettings.Default,
             new NativeWindowSettings() { Size = (width, height), Title = title })
@@ -238,13 +240,15 @@ public class Game : GameWindow
         //cubeTransform *= Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
         _objects[0].Transform(cubeTransform);
 
+
         var tetraederTransform = Matrix4.Identity;
-        tetraederTransform *= Matrix4.CreateTranslation(2, 0, 0);
+        tetraederTransform *= Matrix4.CreateTranslation(2, 1, 0);
         tetraederTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
+
         _objects[1].Transform(tetraederTransform);
 
         _objects[0].SetAmbientLight(new Vector3(0.2f, 0.1f, 0.01f));
-        _objects[0].SetLightPos(new Vector3(2, 2f, 0.8f));
+        _objects[0].SetLightPos(tetraederTransform.ExtractTranslation());
 
         foreach (var obj in _objects)
         {
