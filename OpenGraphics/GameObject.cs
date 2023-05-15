@@ -52,18 +52,29 @@ public class GameObject : IDisposable
             size: 3, // This is about dimensions
             type: VertexAttribPointerType.Float,
             normalized: false,
-            stride: 5 * sizeof(float),
+            stride: 8 * sizeof(float),
             offset: 0);
 
-        var textureLocation = _shader.GetAttribLocation("aTexCoord");
-        GL.EnableVertexAttribArray(textureLocation);
+        var aNormalLocation = _shader.GetAttribLocation("aNormal");
+        GL.EnableVertexAttribArray(aNormalLocation);
         GL.VertexAttribPointer(
-            index: textureLocation,
+            index: aNormalLocation,
+            size: 3,
+            type: VertexAttribPointerType.Float,
+            normalized: false,
+            stride: 8 * sizeof(float),
+            offset: 3 * sizeof(float)
+            );
+
+        var aTextureLocation = _shader.GetAttribLocation("aTexCoord");
+        GL.EnableVertexAttribArray(aTextureLocation);
+        GL.VertexAttribPointer(
+            index: aTextureLocation,
             size: 2, // This is about dimensions
             type: VertexAttribPointerType.Float,
             normalized: false,
-            stride: 5 * sizeof(float),
-            offset: 3 * sizeof(float));
+            stride: 8 * sizeof(float),
+            offset: 6 * sizeof(float));
     }
 
     private void CreateEBO()
@@ -106,6 +117,11 @@ public class GameObject : IDisposable
     public void SetAmbientLight(Vector3 color)
     {
         _shader.SetVector3("lightColor", color);
+    }
+
+    public void SetLightPos(Vector3 position)
+    {
+        _shader.SetVector3("lightPos", position);
     }
 
     public void Dispose()
