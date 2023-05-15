@@ -103,6 +103,11 @@ public class GameObject : IDisposable
         _shader.SetMatrix4("projection", matrix);
     }
 
+    public void SetAmbientLight(Vector3 color)
+    {
+        _shader.SetVector3("lightColor", color);
+    }
+
     public void Dispose()
     {
         _shader.Dispose();

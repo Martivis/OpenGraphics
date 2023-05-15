@@ -87,7 +87,7 @@ public class Game : GameWindow
         SetBackgroundColor(0, 0, 0, 1);
 
         var objectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
-        var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
+        var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\light.frag");
 
         var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
         var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
@@ -218,7 +218,7 @@ public class Game : GameWindow
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         ApplyTransformations();
-
+        _objects[0].SetAmbientLight(new Vector3(0.2f, 0.1f, 0.01f));
         foreach (var obj in _objects)
         {
             obj.Draw();
