@@ -124,6 +124,11 @@ public class GameObject : IDisposable
         _shader.SetVector3("lightPos", position);
     }
 
+    public void SetViewPos(Vector3 position)
+    {
+        _shader.SetVector3("viewPos", position);
+    }
+
     public void Dispose()
     {
         _shader.Dispose();

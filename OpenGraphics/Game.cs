@@ -247,8 +247,9 @@ public class Game : GameWindow
 
         _objects[1].Transform(tetraederTransform);
 
-        _objects[0].SetAmbientLight(new Vector3(0.2f, 0.1f, 0.01f));
+        _objects[0].SetAmbientLight(new Vector3(1, 0.9f, 0.81f));
         _objects[0].SetLightPos(tetraederTransform.ExtractTranslation());
+        _objects[0].SetViewPos(_camera.Position);
 
         foreach (var obj in _objects)
         {
