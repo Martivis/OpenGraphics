@@ -247,8 +247,23 @@ public class Game : GameWindow
 
         _objects[1].Transform(tetraederTransform);
 
-        _objects[0].SetAmbientLight(new Vector3(1, 0.9f, 0.81f));
-        _objects[0].SetLightPos(tetraederTransform.ExtractTranslation());
+        var light = new Light()
+        {
+            Ambient = new Vector3(0.1f, 0.1f, 0.1f),
+            Diffuse = new Vector3(1, 0.9f, 0.81f),
+            Specular = new Vector3(1, 0.9f, 0.81f),
+            Position = tetraederTransform.ExtractTranslation()
+        };
+        var material = new Material()
+        {
+            Ambient = new Vector3(0.8f, 0.8f, 0.8f),
+            Diffuse = new Vector3(1, 1, 1),
+            Specular = new Vector3(0.5f, 0.5f, 0.5f),
+            Shininess = 16f
+        };
+
+        _objects[0].SetMaterial(material);
+        _objects[0].SetLight(light);
         _objects[0].SetViewPos(_camera.Position);
 
         foreach (var obj in _objects)

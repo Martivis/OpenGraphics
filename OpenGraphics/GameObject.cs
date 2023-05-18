@@ -114,19 +114,24 @@ public class GameObject : IDisposable
         _shader.SetMatrix4("projection", matrix);
     }
 
-    public void SetAmbientLight(Vector3 color)
-    {
-        _shader.SetVector3("lightColor", color);
-    }
-
-    public void SetLightPos(Vector3 position)
-    {
-        _shader.SetVector3("lightPos", position);
-    }
-
     public void SetViewPos(Vector3 position)
     {
         _shader.SetVector3("viewPos", position);
+    }
+
+    public void SetMaterial(Material material)
+    {
+        _shader.SetVector3("material.ambient", material.Ambient);
+        _shader.SetVector3("material.diffuse", material.Diffuse);
+        _shader.SetVector3("material.specular", material.Specular);
+        _shader.SetFloat("material.shininess", material.Shininess);
+    }
+    public void SetLight(Light light)
+    {
+        _shader.SetVector3("light.ambient", light.Ambient);
+        _shader.SetVector3("light.diffuse", light.Diffuse);
+        _shader.SetVector3("light.specular", light.Specular);
+        _shader.SetVector3("light.position", light.Position);
     }
 
     public void Dispose()
