@@ -92,12 +92,13 @@ public class Game : GameWindow
         var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\light.frag");
 
         var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
+        var cobblestoneSpecularTexture = Texture.LoadFromFile("Resources/cobblestone_specular.png");
         var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
 
         _objects = new List<GameObject>()
         {
-            new GameObject(objectShader, cobblestoneTexture, _vertices1, _indices1),
-            new GameObject(lightShader, glowstoneTexture, _vertices1, _indices1)
+            new GameObject(objectShader, cobblestoneTexture, cobblestoneSpecularTexture, _vertices1, _indices1),
+            new GameObject(lightShader, glowstoneTexture, glowstoneTexture, _vertices1, _indices1)
         };
 
         GL.Enable(EnableCap.DepthTest);
@@ -256,8 +257,6 @@ public class Game : GameWindow
         };
         var material = new Material()
         {
-            Ambient = new Vector3(0.8f, 0.8f, 0.8f),
-            Diffuse = new Vector3(1, 1, 1),
             Specular = new Vector3(0.5f, 0.5f, 0.5f),
             Shininess = 16f
         };

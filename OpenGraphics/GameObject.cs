@@ -10,21 +10,24 @@ public class GameObject : IDisposable
     private int _vao;
     private int _ebo;
 
-    private Texture _texture;
+    private Texture _diffuseMap;
+    private Texture _specularMap;
     private Shader _shader;
 
     private readonly float[] _vertices;
 
     private readonly uint[] _indices;
 
-    public GameObject(Shader shader, Texture texture, float[] vertices, uint[] indices)
+    public GameObject(Shader shader, Texture diffuse, Texture specular, float[] vertices, uint[] indices)
     {
         _vertices = vertices;
         _indices = indices;
         _shader = shader;
-        _texture = texture;
+        _diffuseMap = diffuse;
+        _specularMap = specular;
 
-        _texture.Use(TextureUnit.Texture0);
+        _diffuseMap.Use(TextureUnit.Texture0);
+        _specularMap.Use(TextureUnit.Texture1);
         _shader.Use();
 
 
@@ -88,7 +91,8 @@ public class GameObject : IDisposable
     {
         GL.BindVertexArray(_vao);
 
-        _texture.Use(TextureUnit.Texture0);
+        _diffuseMap.Use(TextureUnit.Texture0);
+        _specularMap.Use(TextureUnit.Texture1);
         _shader.Use();
 
         GL.DrawElements(
@@ -121,8 +125,8 @@ public class GameObject : IDisposable
 
     public void SetMaterial(Material material)
     {
-        _shader.SetVector3("material.ambient", material.Ambient);
-        _shader.SetVector3("material.diffuse", material.Diffuse);
+        _shader.SetInt("material.diffuse", 0);
+        _shader.SetInt("material.specular", 1);
         _shader.SetVector3("material.specular", material.Specular);
         _shader.SetFloat("material.shininess", material.Shininess);
     }
