@@ -52,21 +52,25 @@ public class Game : GameWindow
         var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
 
         var cubeData = ObjectLoader.GetObject("stub");
-
+        
         _solidObjects = new List<SolidObject>()
         {
-            //new SolidObject(
-            //    cubeData,
-            //    solidObjectShader,
-            //    cobblestoneTexture,
-            //    cobblestoneSpecularTexture,
-            //    MaterialsLoader.GetMaterial("Cobblestone"))
+            new SolidObject(
+                cubeData.GetVertices(),
+                cubeData.GetIndices(),
+                cubeData.GetDictionary(),
+                solidObjectShader,
+                cobblestoneTexture,
+                cobblestoneSpecularTexture,
+                MaterialsLoader.GetMaterial("Cobblestone"))
         };
 
         _gameObjects = new List<GameObject>()
         {
             new GameObject(
-                cubeData,
+                cubeData.GetVertices(),
+                cubeData.GetIndices(),
+                cubeData.GetDictionary(),
                 lightShader,
                 glowstoneTexture)
         };
@@ -199,7 +203,7 @@ public class Game : GameWindow
         var cubeTransform = Matrix4.Identity;
         //cubeTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 15));
         //cubeTransform *= Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
-        //_solidObjects[0].Transform(cubeTransform);
+        _solidObjects[0].Transform(cubeTransform);
 
 
         var tetraederTransform = Matrix4.Identity;
@@ -214,7 +218,7 @@ public class Game : GameWindow
             Position = tetraederTransform.ExtractTranslation()
         };
 
-        //_solidObjects[0].SetLight(light);
+        _solidObjects[0].SetLight(light);
         _gameObjects[0].Transform(tetraederTransform);
 
         foreach (var obj in _solidObjects)

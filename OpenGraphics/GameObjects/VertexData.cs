@@ -20,8 +20,8 @@ public class VertexData
         _indices = indices;
         _format = format;
 
-        CreateVBO();
-        CreateEBO();
+        //CreateVBO();
+        //CreateEBO();
     }
 
     private void CreateVBO()
@@ -40,5 +40,9 @@ public class VertexData
 
     public VBODataFormat GetFormat(string key) => _format[key];
 
-    public int GetVerticesCount() => _vertices.Length;
+    public int GetVerticesCount() => _indices.Length;
+
+    public float[] GetVertices() => _vertices;
+    public uint[] GetIndices() => _indices;
+    public IDictionary<string, VBODataFormat> GetDictionary() => _format;
 }

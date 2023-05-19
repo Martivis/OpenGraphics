@@ -5,20 +5,44 @@ namespace OpenGraphics;
 
 public class GameObject
 {
-    private readonly VertexData _vertexData;
+    private int _vbo;
+    private int _ebo;
+
+    private readonly float[] _vertices;
+    private readonly uint[] _indices;
+
+    private readonly IDictionary<string, VBODataFormat> _format;
+
+    private void CreateVBO()
+    {
+        _vbo = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
+        GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
+    }
+
+    private void CreateEBO()
+    {
+        _ebo = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
+    }
     private int _vao;
 
     protected Shader _shader;
     protected Texture _diffuseMap;
     
 
-    public GameObject(VertexData vertexData, Shader shader, Texture diffuse)
+    public GameObject(float[] vertices, uint[] indices, IDictionary<string, VBODataFormat> format, Shader shader, Texture diffuse)
     {
-        _vertexData = vertexData;
+        _vertices = vertices;
+        _indices = indices;
         _shader = shader;
+        _format = format;
         _diffuseMap = diffuse;
 
+        CreateVBO();
         CreateVAO();
+        CreateEBO();
 
         _diffuseMap.Use(TextureUnit.Texture0);
         _shader.Use();
@@ -38,7 +62,7 @@ public class GameObject
     private void AddAttribute(string key)
     {
         var aLocation = _shader.GetAttribLocation(key);
-        var format = _vertexData.GetFormat(key);
+        var format = _format[key];
         GL.EnableVertexAttribArray(aLocation);
         GL.VertexAttribPointer(
             index: aLocation,
@@ -59,7 +83,7 @@ public class GameObject
 
         GL.DrawElements(
             mode: PrimitiveType.Triangles,
-            count: _vertexData.GetVerticesCount(),
+            count: _vertices.Length,
             type: DrawElementsType.UnsignedInt,
             indices: 0
             );
