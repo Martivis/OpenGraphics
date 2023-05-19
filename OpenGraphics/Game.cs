@@ -9,15 +9,15 @@ namespace OpenGraphics;
 
 public class Game : GameWindow
 {
-    private IList<GameObject> _objects;
+    private IList<SolidObject> _solidObjects;
+    private IList<GameObject> _gameObjects;
 
     Camera _camera;
 
     private float _aspectRatio;
     Stopwatch _stopwatch;
 
-    private uint _framesCount;
-    private double _lastCutoff;
+    private FPSCounter _fpsCounter;
 
     bool _firstMove = true;
     Vector2 _lastCursorPos;
@@ -25,52 +25,7 @@ public class Game : GameWindow
     const float cameraSpeed = 1.5f;
     const float sensitivity = 0.2f;
 
-    float[] _vertices1 = {
-        // Position               Normals                Texture 
-        -0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 0.0f, // Front face
-         0.5f, -0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f,  0.0f,  1.0f,    0.0f, 1.0f,
-                                                       
-        // Position               Normals                Texture                               
-        -0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 0.0f, // Back face   
-        -0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,
-                                                       
-        // Position               Normals                Texture                                
-        -0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 1.0f, // Top face   
-        -0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    0.0f,  1.0f,  0.0f,    1.0f, 1.0f,
-                                                       
-        // Position               Normals                Texture                              
-        -0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 0.0f, // Bottom face  
-         0.5f, -0.5f, -0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, -1.0f,  0.0f,    0.0f, 1.0f,
-                                                       
-        // Position               Normals                Texture                              
-         0.5f, -0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 0.0f, // Right face    
-         0.5f,  0.5f, -0.5f,    1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
-                                                       
-        // Position               Normals                Texture                            
-        -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 0.0f, // Left face       
-        -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f
-    };
-
-    uint[] _indices1 = {
-        0, 1, 2, 0, 2, 3,       // Front face
-        4, 5, 6, 4, 6, 7,       // Back face
-        8, 9, 10, 8, 10, 11,    // Top face
-        12, 13, 14, 12, 14, 15, // Bottom face
-        16, 17, 18, 16, 18, 19, // Right face
-        20, 21, 22, 20, 22, 23  // Left face
-    };
+    
 
     Vector3 _lightPos = new Vector3(0, 0, 0);
 
@@ -79,6 +34,7 @@ public class Game : GameWindow
             new NativeWindowSettings() { Size = (width, height), Title = title })
     {
         _aspectRatio = width / height;
+        _fpsCounter = new FPSCounter();
     }
 
 
@@ -88,17 +44,31 @@ public class Game : GameWindow
 
         SetBackgroundColor(0, 0, 0, 1);
 
-        var objectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
+        var solidObjectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
         var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\light.frag");
 
         var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
         var cobblestoneSpecularTexture = Texture.LoadFromFile("Resources/cobblestone_specular.png");
         var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
 
-        _objects = new List<GameObject>()
+        var cubeData = ObjectLoader.GetObject("stub");
+
+        _solidObjects = new List<SolidObject>()
         {
-            new GameObject(objectShader, cobblestoneTexture, cobblestoneSpecularTexture, _vertices1, _indices1),
-            new GameObject(lightShader, glowstoneTexture, glowstoneTexture, _vertices1, _indices1)
+            //new SolidObject(
+            //    cubeData,
+            //    solidObjectShader,
+            //    cobblestoneTexture,
+            //    cobblestoneSpecularTexture,
+            //    MaterialsLoader.GetMaterial("Cobblestone"))
+        };
+
+        _gameObjects = new List<GameObject>()
+        {
+            new GameObject(
+                cubeData,
+                lightShader,
+                glowstoneTexture)
         };
 
         GL.Enable(EnableCap.DepthTest);
@@ -171,7 +141,7 @@ public class Game : GameWindow
             CursorState = CursorState.Normal;
         }
 
-        CountFps();
+        _fpsCounter.CountFps();
     }
 
     private void RotateCamara()
@@ -195,18 +165,6 @@ public class Game : GameWindow
         }
     }
 
-    private void CountFps()
-    {
-        _framesCount++;
-        if (_stopwatch.Elapsed.TotalSeconds >= _lastCutoff + 1)
-        {
-            _lastCutoff = _stopwatch.Elapsed.TotalSeconds;
-            Console.Clear();
-            Console.WriteLine($"Fps: {_framesCount}");
-            _framesCount = 0;
-        }
-    }
-
     protected override void OnMouseWheel(MouseWheelEventArgs e)
     {
         base.OnMouseWheel(e);
@@ -222,9 +180,11 @@ public class Game : GameWindow
 
         ApplyTransformations();
 
-
-
-        foreach (var obj in _objects)
+        foreach (var obj in _solidObjects)
+        {
+            obj.Draw();
+        }
+        foreach (var obj in _gameObjects)
         {
             obj.Draw();
         }
@@ -239,14 +199,12 @@ public class Game : GameWindow
         var cubeTransform = Matrix4.Identity;
         //cubeTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 15));
         //cubeTransform *= Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
-        _objects[0].Transform(cubeTransform);
+        //_solidObjects[0].Transform(cubeTransform);
 
 
         var tetraederTransform = Matrix4.Identity;
         tetraederTransform *= Matrix4.CreateTranslation(2, 1, 0);
         tetraederTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
-
-        _objects[1].Transform(tetraederTransform);
 
         var light = new Light()
         {
@@ -255,17 +213,18 @@ public class Game : GameWindow
             Specular = new Vector3(1, 0.9f, 0.81f),
             Position = tetraederTransform.ExtractTranslation()
         };
-        var material = new Material()
+
+        //_solidObjects[0].SetLight(light);
+        _gameObjects[0].Transform(tetraederTransform);
+
+        foreach (var obj in _solidObjects)
         {
-            Specular = new Vector3(0.5f, 0.5f, 0.5f),
-            Shininess = 16f
-        };
+            obj.SetViewPos(_camera.Position);
+            obj.SetViewMatrix(_camera.GetViewMatrix());
+            obj.SetProjectionMatrix(_camera.GetProjectionMatrix());
+        }
 
-        _objects[0].SetMaterial(material);
-        _objects[0].SetLight(light);
-        _objects[0].SetViewPos(_camera.Position);
-
-        foreach (var obj in _objects)
+        foreach (var obj in _gameObjects)
         {
             obj.SetViewMatrix(_camera.GetViewMatrix());
             obj.SetProjectionMatrix(_camera.GetProjectionMatrix());
@@ -285,7 +244,11 @@ public class Game : GameWindow
     protected override void OnUnload()
     {
         base.OnUnload();
-        foreach (var obj in _objects)
+        foreach (var obj in _solidObjects)
+        {
+            obj.Dispose();
+        }
+        foreach (var obj in _gameObjects)
         {
             obj.Dispose();
         }
