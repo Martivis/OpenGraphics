@@ -20,8 +20,7 @@ public class VertexData
         _indices = indices;
         _format = format;
 
-        //CreateVBO();
-        //CreateEBO();
+        CreateVBO();
     }
 
     private void CreateVBO()
@@ -31,7 +30,7 @@ public class VertexData
         GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
     }
 
-    private void CreateEBO()
+    public void CreateEBO()
     {
         _ebo = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
@@ -44,5 +43,4 @@ public class VertexData
 
     public float[] GetVertices() => _vertices;
     public uint[] GetIndices() => _indices;
-    public IDictionary<string, VBODataFormat> GetDictionary() => _format;
 }

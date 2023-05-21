@@ -48,7 +48,7 @@ public class Game : GameWindow
         var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\light.frag");
 
         var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
-        var cobblestoneSpecularTexture = Texture.LoadFromFile("Resources/cobblestone_specular.png");
+        var cobblestoneSpecularTexture = Texture.LoadFromFile("Resources/cobblestone_specular2.png");
         var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
 
         var cubeData = ObjectLoader.GetObject("stub");
@@ -56,9 +56,7 @@ public class Game : GameWindow
         _solidObjects = new List<SolidObject>()
         {
             new SolidObject(
-                cubeData.GetVertices(),
-                cubeData.GetIndices(),
-                cubeData.GetDictionary(),
+                cubeData,
                 solidObjectShader,
                 cobblestoneTexture,
                 cobblestoneSpecularTexture,
@@ -68,9 +66,7 @@ public class Game : GameWindow
         _gameObjects = new List<GameObject>()
         {
             new GameObject(
-                cubeData.GetVertices(),
-                cubeData.GetIndices(),
-                cubeData.GetDictionary(),
+                cubeData,
                 lightShader,
                 glowstoneTexture)
         };

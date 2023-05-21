@@ -6,8 +6,8 @@ public class SolidObject : GameObject
 {
     private Texture _specularMap;
 
-    public SolidObject(float[] vertices, uint[] indices, IDictionary<string, VBODataFormat> format, Shader shader, Texture diffuse, Texture specular, Material material) 
-        : base(vertices, indices, format, shader, diffuse)
+    public SolidObject(VertexData vertexData, Shader shader, Texture diffuse, Texture specular, Material material) 
+        : base(vertexData, shader, diffuse)
     {
         _specularMap = specular;
         SetMaterial(material);
