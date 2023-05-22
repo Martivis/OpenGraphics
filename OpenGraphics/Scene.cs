@@ -6,36 +6,113 @@ namespace OpenGraphics;
 
 public class Scene : IDisposable
 {
-    private IList<SolidObject> _solidObjects;
-    private IList<GameObject> _gameObjects;
+    private Dictionary<string, GameObject> _gameObjects;
+    private Dictionary<string, Texture> _textures;
     private Stopwatch _stopwatch;
     public Scene()
     {
-        var solidObjectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
-        var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\light.frag");
+        _textures = new Dictionary<string, Texture>()
+        {
+            { "cobblestone", Texture.LoadFromFile("Resources/cobblestone.png") },
+            { "cobblestoneSpecular", Texture.LoadFromFile("Resources/cobblestone_specular2.png") },
+            { "glowstone", Texture.LoadFromFile("Resources/glowstone.png") },
+            { "oakPlanks", Texture.LoadFromFile("Resources/planks_oak.png") },
+            { "goldBlock", Texture.LoadFromFile("Resources/gold_block.png") },
+        };
 
-        var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
-        var cobblestoneSpecularTexture = Texture.LoadFromFile("Resources/cobblestone_specular2.png");
-        var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
 
         var cubeData = ObjectLoader.GetObject("stub");
 
-        _solidObjects = new List<SolidObject>()
+        _gameObjects = new Dictionary<string, GameObject>()
         {
-            new SolidObject(
-                cubeData,
-                solidObjectShader,
-                cobblestoneTexture,
-                cobblestoneSpecularTexture,
-                MaterialsLoader.GetMaterial("Cobblestone"))
-        };
-
-        _gameObjects = new List<GameObject>()
-        {
-            new GameObject(
-                cubeData,
-                lightShader,
-                glowstoneTexture)
+            {
+                "cobblestone1",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["cobblestone"],
+                    _textures["cobblestoneSpecular"],
+                    MaterialsLoader.GetMaterial("Cobblestone"),
+                    Matrix4.CreateTranslation(0, 0, 0))
+            },
+            {
+                "wooden_planks1",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["oakPlanks"],
+                    _textures["oakPlanks"],
+                    MaterialsLoader.GetMaterial("WoodenPlanks"),
+                    Matrix4.CreateTranslation(-1, -1, 0))
+            },
+            {
+                "wooden_planks2",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["oakPlanks"],
+                    _textures["oakPlanks"],
+                    MaterialsLoader.GetMaterial("WoodenPlanks"),
+                    Matrix4.CreateTranslation(1, -1, 0))
+            },
+            {
+                "wooden_planks3",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["oakPlanks"],
+                    _textures["oakPlanks"],
+                    MaterialsLoader.GetMaterial("WoodenPlanks"),
+                    Matrix4.CreateTranslation(0, -1, 1))
+            },
+            {
+                "wooden_planks4",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["oakPlanks"],
+                    _textures["oakPlanks"],
+                    MaterialsLoader.GetMaterial("WoodenPlanks"),
+                    Matrix4.CreateTranslation(0, -1, -1))
+            },
+            {
+                "wooden_planks5",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["oakPlanks"],
+                    _textures["oakPlanks"],
+                    MaterialsLoader.GetMaterial("WoodenPlanks"),
+                    Matrix4.CreateTranslation(-1, -1, -1))
+            },
+            {
+                "wooden_planks6",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["oakPlanks"],
+                    _textures["oakPlanks"],
+                    MaterialsLoader.GetMaterial("WoodenPlanks"),
+                    Matrix4.CreateTranslation(-1, -1, 1))
+            },
+            {
+                "gold_block1",
+                new SolidObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag"),
+                    _textures["goldBlock"],
+                    _textures["goldBlock"],
+                    MaterialsLoader.GetMaterial("GoldBlock"),
+                    Matrix4.CreateTranslation(1, -1, 1))
+            },
+            {
+                "rotating_glowstone",
+                new GameObject(
+                    cubeData,
+                    new Shader(@"Shaders\shader.vert", @"Shaders\light.frag"),
+                    _textures["glowstone"],
+                    Matrix4.CreateTranslation(0, 0, 0))
+            },
         };
 
         _stopwatch = new Stopwatch();
@@ -46,13 +123,9 @@ public class Scene : IDisposable
     {
         ApplyTransformations(camera);
 
-        foreach (var obj in _solidObjects)
-        {
-            obj.Draw();
-        }
         foreach (var obj in _gameObjects)
         {
-            obj.Draw();
+            obj.Value.Draw();
         }
     }
 
@@ -60,50 +133,38 @@ public class Scene : IDisposable
     {
         var step = _stopwatch.Elapsed.TotalSeconds;
 
-        var cubeTransform = Matrix4.Identity;
-        //cubeTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 15));
-        //cubeTransform *= Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
-        _solidObjects[0].Transform(cubeTransform);
-
-
-        var tetraederTransform = Matrix4.Identity;
-        tetraederTransform *= Matrix4.CreateTranslation(2, 1, 0);
-        tetraederTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
+        var glowstoneRotation = Matrix4.Identity;
+        glowstoneRotation *= Matrix4.CreateTranslation(2, 1, 0);
+        glowstoneRotation *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
 
         var light = new Light()
         {
             Ambient = new Vector3(0.1f, 0.1f, 0.1f),
             Diffuse = new Vector3(1, 0.9f, 0.81f),
             Specular = new Vector3(1, 0.9f, 0.81f),
-            Position = tetraederTransform.ExtractTranslation()
+            Position = glowstoneRotation.ExtractTranslation()
         };
 
-        _solidObjects[0].SetLight(light);
-        _gameObjects[0].Transform(tetraederTransform);
-
-        foreach (var obj in _solidObjects)
-        {
-            obj.SetViewPos(camera.Position);
-            obj.SetViewMatrix(camera.GetViewMatrix());
-            obj.SetProjectionMatrix(camera.GetProjectionMatrix());
-        }
+        _gameObjects["rotating_glowstone"].Position = glowstoneRotation;
 
         foreach (var obj in _gameObjects)
         {
-            obj.SetViewMatrix(camera.GetViewMatrix());
-            obj.SetProjectionMatrix(camera.GetProjectionMatrix());
+            (obj.Value as SolidObject)?.SetLight(light);
+
+            if (obj.Value is SolidObject solid)
+            {
+                solid.SetViewPos(camera.Position);
+            }
+            obj.Value.SetViewMatrix(camera.GetViewMatrix());
+            obj.Value.SetProjectionMatrix(camera.GetProjectionMatrix());
         }
     }
 
     public void Dispose()
     {
-        foreach (var obj in _solidObjects)
-        {
-            obj.Dispose();
-        }
         foreach (var obj in _gameObjects)
         {
-            obj.Dispose();
+            obj.Value.Dispose();
         }
     }
 }

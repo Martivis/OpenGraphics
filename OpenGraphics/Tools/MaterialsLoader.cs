@@ -18,6 +18,22 @@ public static class MaterialsLoader
                     Specular = new Vector3(0.5f, 0.5f, 0.5f),
                     Shininess = 16f
                 }
+            },
+            {
+                "GoldBlock",
+                new Material
+                {
+                    Specular = new Vector3(0.3f, 0.3f, 0.3f),
+                    Shininess = 64f
+                }
+            },
+            {
+                "WoodenPlanks",
+                new Material
+                {
+                    Specular = new Vector3(0.3f, 0.3f, 0.3f),
+                    Shininess = 64f
+                }
             }
         };
     }

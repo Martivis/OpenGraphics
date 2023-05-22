@@ -11,11 +11,27 @@ public class GameObject
     protected Shader _shader;
     protected Texture _diffuseMap;
 
-    public GameObject(VertexData vertexData, Shader shader, Texture diffuse)
+    private Matrix4 _position;
+
+    public Matrix4 Position
+    {
+        get
+        {
+            return _position;
+        }
+        set
+        {
+            _position = value;
+            _shader.SetMatrix4("transform", Matrix4.Identity * value);
+        }
+    }
+
+    public GameObject(VertexData vertexData, Shader shader, Texture diffuse, Matrix4 position)
     {
         _vertexData = vertexData;
         _shader = shader;
         _diffuseMap = diffuse;
+        Position = position;
 
         CreateVAO();
         vertexData.CreateEBO();
@@ -62,11 +78,6 @@ public class GameObject
             type: DrawElementsType.UnsignedInt,
             indices: 0
             );
-    }
-
-    public void Transform(Matrix4 matrix)
-    {
-        _shader.SetMatrix4("transform", Matrix4.Identity * matrix);
     }
 
     public void SetViewMatrix(Matrix4 matrix)

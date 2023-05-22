@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace OpenGraphics;
 
@@ -6,8 +7,8 @@ public class SolidObject : GameObject
 {
     private Texture _specularMap;
 
-    public SolidObject(VertexData vertexData, Shader shader, Texture diffuse, Texture specular, Material material) 
-        : base(vertexData, shader, diffuse)
+    public SolidObject(VertexData vertexData, Shader shader, Texture diffuse, Texture specular, Material material, Matrix4 position) 
+        : base(vertexData, shader, diffuse, position)
     {
         _specularMap = specular;
         SetMaterial(material);
