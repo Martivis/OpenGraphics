@@ -9,13 +9,10 @@ namespace OpenGraphics;
 
 public class Game : GameWindow
 {
-    private IList<SolidObject> _solidObjects;
-    private IList<GameObject> _gameObjects;
-
+    Scene _scene;
     Camera _camera;
 
     private float _aspectRatio;
-    Stopwatch _stopwatch;
 
     private FPSCounter _fpsCounter;
 
@@ -44,47 +41,17 @@ public class Game : GameWindow
 
         SetBackgroundColor(0, 0, 0, 1);
 
-        var solidObjectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
-        var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\light.frag");
-
-        var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
-        var cobblestoneSpecularTexture = Texture.LoadFromFile("Resources/cobblestone_specular2.png");
-        var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
-
-        var cubeData = ObjectLoader.GetObject("stub");
-        
-        _solidObjects = new List<SolidObject>()
-        {
-            new SolidObject(
-                cubeData,
-                solidObjectShader,
-                cobblestoneTexture,
-                cobblestoneSpecularTexture,
-                MaterialsLoader.GetMaterial("Cobblestone"))
-        };
-
-        _gameObjects = new List<GameObject>()
-        {
-            new GameObject(
-                cubeData,
-                lightShader,
-                glowstoneTexture)
-        };
-
         GL.Enable(EnableCap.DepthTest);
 
         _camera = new Camera(Vector3.UnitZ * 2.0f, _aspectRatio);
-
-        _stopwatch = new Stopwatch();
-        _stopwatch.Start();
+        _scene = new Scene();
+        
     }
 
     private void SetBackgroundColor(float red, float green, float blue, float alpha)
     {
         GL.ClearColor(red, green, blue, alpha);
     }
-
-
 
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
@@ -178,60 +145,10 @@ public class Game : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        ApplyTransformations();
-
-        foreach (var obj in _solidObjects)
-        {
-            obj.Draw();
-        }
-        foreach (var obj in _gameObjects)
-        {
-            obj.Draw();
-        }
+        _scene.Draw(_camera);
 
         SwapBuffers();
     }
-
-    private void ApplyTransformations()
-    {
-        var step = _stopwatch.Elapsed.TotalSeconds;
-
-        var cubeTransform = Matrix4.Identity;
-        //cubeTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 15));
-        //cubeTransform *= Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
-        _solidObjects[0].Transform(cubeTransform);
-
-
-        var tetraederTransform = Matrix4.Identity;
-        tetraederTransform *= Matrix4.CreateTranslation(2, 1, 0);
-        tetraederTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
-
-        var light = new Light()
-        {
-            Ambient = new Vector3(0.1f, 0.1f, 0.1f),
-            Diffuse = new Vector3(1, 0.9f, 0.81f),
-            Specular = new Vector3(1, 0.9f, 0.81f),
-            Position = tetraederTransform.ExtractTranslation()
-        };
-
-        _solidObjects[0].SetLight(light);
-        _gameObjects[0].Transform(tetraederTransform);
-
-        foreach (var obj in _solidObjects)
-        {
-            obj.SetViewPos(_camera.Position);
-            obj.SetViewMatrix(_camera.GetViewMatrix());
-            obj.SetProjectionMatrix(_camera.GetProjectionMatrix());
-        }
-
-        foreach (var obj in _gameObjects)
-        {
-            obj.SetViewMatrix(_camera.GetViewMatrix());
-            obj.SetProjectionMatrix(_camera.GetProjectionMatrix());
-        }
-    }
-
-
 
     protected override void OnResize(ResizeEventArgs e)
     {
@@ -244,13 +161,6 @@ public class Game : GameWindow
     protected override void OnUnload()
     {
         base.OnUnload();
-        foreach (var obj in _solidObjects)
-        {
-            obj.Dispose();
-        }
-        foreach (var obj in _gameObjects)
-        {
-            obj.Dispose();
-        }
+        _scene.Dispose();
     }
 }
