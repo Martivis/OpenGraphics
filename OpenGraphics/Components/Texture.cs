@@ -1,5 +1,4 @@
-﻿
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 using StbImageSharp;
 using System.Reflection.Metadata;
 using PixelFormat = OpenTK.Graphics.OpenGL4.PixelFormat;

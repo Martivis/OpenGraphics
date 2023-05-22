@@ -9,15 +9,12 @@ namespace OpenGraphics;
 
 public class Game : GameWindow
 {
-    private IList<GameObject> _objects;
-
+    Scene _scene;
     Camera _camera;
 
     private float _aspectRatio;
-    Stopwatch _stopwatch;
 
-    private uint _framesCount;
-    private double _lastCutoff;
+    private FPSCounter _fpsCounter;
 
     bool _firstMove = true;
     Vector2 _lastCursorPos;
@@ -25,58 +22,16 @@ public class Game : GameWindow
     const float cameraSpeed = 1.5f;
     const float sensitivity = 0.2f;
 
-    float[] _vertices1 = {
-    // Front face
-        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, 0.0f, 1.0f,
+    
 
-        // Back face
-        -0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-        // Top face
-        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-
-        // Bottom face
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, 0.0f, 1.0f,
-
-        // Right face
-         0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f, 0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-
-        // Left face
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f
-    };
-
-    uint[] _indices1 = {
-        0, 1, 2, 0, 2, 3,       // Front face
-        4, 5, 6, 4, 6, 7,       // Back face
-        8, 9, 10, 8, 10, 11,    // Top face
-        12, 13, 14, 12, 14, 15, // Bottom face
-        16, 17, 18, 16, 18, 19, // Right face
-        20, 21, 22, 20, 22, 23  // Left face
-    };
+    Vector3 _lightPos = new Vector3(0, 0, 0);
 
     public Game(int width, int height, string title)
         : base(GameWindowSettings.Default,
             new NativeWindowSettings() { Size = (width, height), Title = title })
     {
         _aspectRatio = width / height;
+        _fpsCounter = new FPSCounter();
     }
 
 
@@ -86,32 +41,17 @@ public class Game : GameWindow
 
         SetBackgroundColor(0, 0, 0, 1);
 
-        var objectShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
-        var lightShader = new Shader(@"Shaders\shader.vert", @"Shaders\shader.frag");
-
-        var cobblestoneTexture = Texture.LoadFromFile("Resources/cobblestone.png");
-        var glowstoneTexture = Texture.LoadFromFile("Resources/glowstone.png");
-
-        _objects = new List<GameObject>()
-        {
-            new GameObject(objectShader, cobblestoneTexture, _vertices1, _indices1),
-            new GameObject(lightShader, glowstoneTexture, _vertices1, _indices1)
-        };
-
         GL.Enable(EnableCap.DepthTest);
 
         _camera = new Camera(Vector3.UnitZ * 2.0f, _aspectRatio);
-
-        _stopwatch = new Stopwatch();
-        _stopwatch.Start();
+        _scene = new Scene();
+        
     }
 
     private void SetBackgroundColor(float red, float green, float blue, float alpha)
     {
         GL.ClearColor(red, green, blue, alpha);
     }
-
-
 
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
@@ -168,7 +108,7 @@ public class Game : GameWindow
             CursorState = CursorState.Normal;
         }
 
-        CountFps();
+        _fpsCounter.CountFps();
     }
 
     private void RotateCamara()
@@ -192,18 +132,6 @@ public class Game : GameWindow
         }
     }
 
-    private void CountFps()
-    {
-        _framesCount++;
-        if (_stopwatch.Elapsed.TotalSeconds >= _lastCutoff + 1)
-        {
-            _lastCutoff = _stopwatch.Elapsed.TotalSeconds;
-            Console.Clear();
-            Console.WriteLine($"Fps: {_framesCount}");
-            _framesCount = 0;
-        }
-    }
-
     protected override void OnMouseWheel(MouseWheelEventArgs e)
     {
         base.OnMouseWheel(e);
@@ -217,38 +145,10 @@ public class Game : GameWindow
 
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        ApplyTransformations();
-
-        foreach (var obj in _objects)
-        {
-            obj.Draw();
-        }
+        _scene.Draw(_camera);
 
         SwapBuffers();
     }
-
-    private void ApplyTransformations()
-    {
-        var step = _stopwatch.Elapsed.TotalSeconds;
-
-        var cubeTransform = Matrix4.Identity;
-        //cubeTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 15));
-        //cubeTransform *= Matrix4.CreateRotationZ((float)MathHelper.DegreesToRadians(step * 15));
-        _objects[0].Transform(cubeTransform);
-
-        var tetraederTransform = Matrix4.Identity;
-        tetraederTransform *= Matrix4.CreateTranslation(2, 0, 0);
-        tetraederTransform *= Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(step * 10));
-        _objects[1].Transform(tetraederTransform);
-
-        foreach (var obj in _objects)
-        {
-            obj.SetViewMatrix(_camera.GetViewMatrix());
-            obj.SetProjectionMatrix(_camera.GetProjectionMatrix());
-        }
-    }
-
-
 
     protected override void OnResize(ResizeEventArgs e)
     {
@@ -261,9 +161,6 @@ public class Game : GameWindow
     protected override void OnUnload()
     {
         base.OnUnload();
-        foreach (var obj in _objects)
-        {
-            obj.Dispose();
-        }
+        _scene.Dispose();
     }
 }
